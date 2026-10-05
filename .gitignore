@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Build and Output directories
+target/
+build/
+dist/
+coverage/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.springBeans
+.sts4-cache
+nbproject/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Maven Wrapper
+!.mvn/wrapper/maven-wrapper.jar
