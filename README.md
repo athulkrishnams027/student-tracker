@@ -67,6 +67,8 @@ flowchart LR
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/student` | Create a new student |
+| `POST` | `/admin/login` | Admin login (username & password) |
+| `POST` | `/student/login` | Student login with email & password |
 | `GET` | `/students` | Get all students (sorted by creation timestamp) |
 | `GET` | `/student/{id}` | Get student details by ID |
 | `PUT` | `/student/{id}` | Update existing student |

@@ -4,6 +4,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navigationbar from "./components/Navigationbar";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
+import StudentProfile from "./pages/StudentProfile";
 import AddUser from "./components/users/AddUser";
 import EditUser from "./components/users/EditUser";
 
@@ -26,6 +28,12 @@ function App() {
         <Routes>
            {/* Route for the home page, which renders the Home component */}
           <Route exact path="/" element={<Home />} />
+
+          {/* Route for the Student Login page */}
+          <Route exact path="/login" element={<Login />} />
+
+          {/* Route for Student Profile / Dashboard */}
+          <Route exact path="/profile" element={<StudentProfile />} />
 
           {/* Route for the Add Student page, which renders the AddUser component */}
           <Route exact path="/addstudent" element={<AddUser />} />

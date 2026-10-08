@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,6 +11,7 @@ import {
   Button,
 } from "@material-tailwind/react";
 import { EyeFill, EyeSlashFill } from "react-bootstrap-icons";
+import { getAuth, isStudent, getAuthHeaders } from "../../utils/auth";
 
 const API_BASE_URL = process.env.REACT_APP_PRODUCTION_API || "http://localhost:8080";
 
@@ -27,6 +28,17 @@ const AddUser = () => {
     weight: "",
     gpa: "",
   });
+
+  useEffect(() => {
+    const auth = getAuth();
+    if (!auth) {
+      navigate("/login", {
+        state: { message: "Admin login required to register new students.", tab: "admin" },
+      });
+    } else if (isStudent()) {
+      navigate("/profile");
+    }
+  }, [navigate]);
 
   const { name, email, password, hairColor, height, weight, gpa } = student;
 
@@ -48,8 +60,12 @@ const AddUser = () => {
     e.preventDefault();
 
     if (!gpaError) {
-      await axios.post(`${API_BASE_URL}/student`, student);
-      navigate("/");
+      try {
+        await axios.post(`${API_BASE_URL}/student`, student, getAuthHeaders());
+        navigate("/");
+      } catch (err) {
+        alert("Failed to add student: " + (err.response?.data?.message || err.message));
+      }
     }
   };
 

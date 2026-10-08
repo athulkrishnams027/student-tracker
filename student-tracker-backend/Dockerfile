@@ -1,9 +1,14 @@
-FROM maven:3.8.5-openjdk-17 AS build
-COPY . .
-RUN mvn clean package -DskipTests 
+# Step 1: Use Java 17
+FROM eclipse-temurin:17-jdk
 
-FROM openjdk:17.0.1-jdk-slim
-COPY --from=build /target/student-tracker-backend-0.0.1-SNAPSHOT.jar student-tracker-backend.jar
+# Step 2: Create a working directory inside the container
+WORKDIR /app
+
+# Step 3: Copy the Spring Boot JAR into the container
+COPY target/*.jar app.jar
+
+# Step 4: Tell Docker that the application uses port 8080
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "student-tracker-backend.jar"]
 
+# Step 5: Start the Spring Boot application
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -11,8 +11,10 @@ import {
   Button,
 } from "@material-tailwind/react";
 import { EyeFill, EyeSlashFill } from "react-bootstrap-icons";
+import { getAuth, isStudent, getAuthHeaders } from "../../utils/auth";
 
-const API_BASE_URL = process.env.REACT_APP_PRODUCTION_API || "http://localhost:8080";
+const API_BASE_URL =
+  process.env.REACT_APP_PRODUCTION_API || "http://localhost:8080";
 
 const EditUser = () => {
   const { id } = useParams();
@@ -31,14 +33,41 @@ const EditUser = () => {
 
   const { name, email, password, hairColor, height, weight, gpa } = student;
 
-  useEffect(() => {
-    loadUser();
-  }, []);
+  const loadUser = useCallback(async () => {
+    try {
+      const result = await axios.get(
+        `${API_BASE_URL}/student/${id}`,
+        getAuthHeaders()
+      );
+      setStudent(result.data);
+    } catch (err) {
+      alert(
+        "Failed to load student: " +
+          (err.response?.data?.message || err.message)
+      );
+      if (isStudent()) navigate("/profile");
+      else navigate("/");
+    }
+  }, [id, navigate]);
 
-  const loadUser = async () => {
-    const result = await axios.get(`${API_BASE_URL}/student/${id}`);
-    setStudent(result.data);
-  };
+  useEffect(() => {
+    const auth = getAuth();
+    if (!auth) {
+      navigate("/login", {
+        state: { message: "Please log in to edit student details." },
+      });
+      return;
+    }
+
+    // A student is only allowed to edit their OWN record
+    if (auth.role === "STUDENT" && String(auth.id) !== String(id)) {
+      alert("Access denied: You cannot edit another student's record.");
+      navigate("/profile");
+      return;
+    }
+
+    loadUser();
+  }, [id, navigate, loadUser]);
 
   const onInputChange = (e) => {
     setStudent({ ...student, [e.target.name]: e.target.value });
@@ -58,7 +87,30 @@ const EditUser = () => {
     e.preventDefault();
 
     if (!gpaError) {
-      await axios.put(`${API_BASE_URL}/student/${id}`, student);
+      try {
+        await axios.put(
+          `${API_BASE_URL}/student/${id}`,
+          student,
+          getAuthHeaders()
+        );
+        if (isStudent()) {
+          navigate("/profile");
+        } else {
+          navigate("/");
+        }
+      } catch (err) {
+        alert(
+          "Failed to update student: " +
+            (err.response?.data?.message || err.message)
+        );
+      }
+    }
+  };
+
+  const handleCancel = () => {
+    if (isStudent()) {
+      navigate("/profile");
+    } else {
       navigate("/");
     }
   };
@@ -66,14 +118,14 @@ const EditUser = () => {
   return (
     <div className="flex justify-center items-center py-5">
       <Card className="w-1/2 shadow">
-        <form onSubmit={(e) => onSubmit(e)}>
+        <form onSubmit={onSubmit}>
           <CardHeader
             variant="gradient"
             color="red"
             className="mb-4 grid h-28 place-items-center"
           >
             <Typography variant="h3" color="white">
-              Change the Student Information
+              {isStudent() ? "Edit Your Profile" : "Change Student Information"}
             </Typography>
           </CardHeader>
           <CardBody color="teal" className="flex flex-col gap-4">
@@ -84,7 +136,7 @@ const EditUser = () => {
               value={name}
               name="name"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
@@ -94,9 +146,9 @@ const EditUser = () => {
               value={email}
               name="email"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
-            <div style={{ position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
               <Input
                 color="teal"
                 type={showPassword ? "text" : "password"}
@@ -105,17 +157,12 @@ const EditUser = () => {
                 value={password}
                 name="password"
                 required
-                onChange={(e) => onInputChange(e)}
+                onChange={onInputChange}
+                style={{ flex: 1 }}
               />
               <div
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  right: "10px",
-                  transform: "translateY(-50%)",
-                  cursor: "pointer",
-                }}
+                style={{ cursor: "pointer", marginLeft: "-40px", zIndex: 1 }}
               >
                 {showPassword ? (
                   <EyeSlashFill color="gray" size="20" />
@@ -124,7 +171,6 @@ const EditUser = () => {
                 )}
               </div>
             </div>
-
             <Input
               color="teal"
               label="Hair Color"
@@ -132,31 +178,31 @@ const EditUser = () => {
               value={hairColor}
               name="hairColor"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
               type="number"
               min="0"
               max="300"
-              label="Height"
+              label="Height (rounded to the nearest Cm)"
               size="lg"
               value={height}
               name="height"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
               type="number"
               min="0"
               max="600"
-              label="Weight"
+              label="Weight (rounded to the nearest Kg)"
               size="lg"
               value={weight}
               name="weight"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
@@ -169,7 +215,7 @@ const EditUser = () => {
               value={gpa}
               name="gpa"
               required
-              onChange={(e) => onGpaChange(e)}
+              onChange={onGpaChange}
               error={gpaError}
             />
           </CardBody>
@@ -182,7 +228,7 @@ const EditUser = () => {
               color="red"
               fullWidth
               className="my-2"
-              onClick={() => navigate("/")}
+              onClick={handleCancel}
             >
               Cancel
             </Button>
