@@ -1,8 +1,18 @@
 package com.studenttrackercurd.studenttrackerbackend.Controller;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,8 +21,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Sort;
 import com.studenttrackercurd.studenttrackerbackend.Exception.UserNotFoundException;
 import com.studenttrackercurd.studenttrackerbackend.Model.User;
@@ -74,6 +86,7 @@ public class UserController {
             studentData.put("height", student.getHeight());
             studentData.put("gpa", student.getGpa());
             studentData.put("creationTimestamp", student.getCreationTimestamp());
+            studentData.put("profilePicture", student.getProfilePicture());
             studentData.put("role", "STUDENT");
             return ResponseEntity.ok(studentData);
         }
@@ -153,6 +166,9 @@ public class UserController {
             user.setGpa(newUser.getGpa());
             user.setEmail(newUser.getEmail());
             user.setPassword(newUser.getPassword());
+            if (newUser.getProfilePicture() != null) {
+                user.setProfilePicture(newUser.getProfilePicture());
+            }
             return userRepo.save(user);
         }).orElseThrow(() -> new UserNotFoundException(id));
 
@@ -173,6 +189,129 @@ public class UserController {
         }
         userRepo.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "User with id: " + id + " was deleted."));
+    }
+
+    @PostMapping("/student/{id}/photo")
+    public ResponseEntity<?> uploadPhoto(
+            @PathVariable Long id,
+            @RequestParam("photo") MultipartFile file,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdStr) {
+        
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
+        boolean isOwner = false;
+        if (userIdStr != null) {
+            try {
+                isOwner = Long.parseLong(userIdStr) == id;
+            } catch (NumberFormatException ignored) {}
+        }
+
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Access denied. You can only update your own profile picture."));
+        }
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Please select a valid image file."));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Uploaded file must be an image."));
+        }
+
+        try {
+            Path uploadDir = Paths.get("uploads/profile-photos");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+
+            String originalName = file.getOriginalFilename();
+            String extension = ".jpg";
+            if (originalName != null && originalName.contains(".")) {
+                extension = originalName.substring(originalName.lastIndexOf("."));
+            }
+
+            String fileName = "student_" + id + "_" + System.currentTimeMillis() + extension;
+            Path targetPath = uploadDir.resolve(fileName);
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+            User user = userRepo.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+            user.setProfilePicture(fileName);
+            userRepo.save(user);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Profile picture uploaded successfully",
+                    "fileName", fileName,
+                    "photoUrl", "/student/" + id + "/photo"
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to store image: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/student/{id}/photo")
+    public ResponseEntity<Resource> getPhoto(@PathVariable Long id) {
+        User user = userRepo.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        String fileName = user.getProfilePicture();
+        if (fileName == null || fileName.trim().isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            Path filePath = Paths.get("uploads/profile-photos").resolve(fileName);
+            if (!Files.exists(filePath)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Resource resource = new UrlResource(filePath.toUri());
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "image/jpeg";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (MalformedURLException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/student/{id}/photo")
+    public ResponseEntity<?> deletePhoto(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdStr) {
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
+        boolean isOwner = false;
+        if (userIdStr != null) {
+            try {
+                isOwner = Long.parseLong(userIdStr) == id;
+            } catch (NumberFormatException ignored) {}
+        }
+
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Access denied."));
+        }
+
+        User user = userRepo.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        String currentFile = user.getProfilePicture();
+        if (currentFile != null) {
+            try {
+                Path filePath = Paths.get("uploads/profile-photos").resolve(currentFile);
+                Files.deleteIfExists(filePath);
+            } catch (IOException ignored) {}
+        }
+        user.setProfilePicture(null);
+        userRepo.save(user);
+
+        return ResponseEntity.ok(Map.of("message", "Profile picture removed."));
     }
 
 

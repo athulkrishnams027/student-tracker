@@ -10,7 +10,7 @@ import {
   Input,
   Button,
 } from "@material-tailwind/react";
-import { EyeFill, EyeSlashFill } from "react-bootstrap-icons";
+import { EyeFill, EyeSlashFill, CameraFill, XCircleFill } from "react-bootstrap-icons";
 import { getAuth, isStudent, getAuthHeaders } from "../../utils/auth";
 
 const API_BASE_URL = process.env.REACT_APP_PRODUCTION_API || "http://localhost:8080";
@@ -19,6 +19,8 @@ const AddUser = () => {
   const navigate = useNavigate();
   const [gpaError, setGpaError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [student, setStudent] = useState({
     name: "",
     email: "",
@@ -56,12 +58,42 @@ const AddUser = () => {
     setStudent({ ...student, gpa: value });
   };
 
+  const onPhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
+        return;
+      }
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const removeSelectedPhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
 
     if (!gpaError) {
       try {
-        await axios.post(`${API_BASE_URL}/student`, student, getAuthHeaders());
+        const res = await axios.post(`${API_BASE_URL}/student`, student, getAuthHeaders());
+        
+        // Upload photo if chosen
+        if (photoFile && res.data && res.data.id) {
+          const formData = new FormData();
+          formData.append("photo", photoFile);
+          await axios.post(`${API_BASE_URL}/student/${res.data.id}/photo`, formData, {
+            headers: {
+              ...getAuthHeaders().headers,
+              "Content-Type": "multipart/form-data",
+            },
+          });
+        }
+
         navigate("/");
       } catch (err) {
         alert("Failed to add student: " + (err.response?.data?.message || err.message));
@@ -72,7 +104,7 @@ const AddUser = () => {
   return (
     <div className="flex justify-center items-center py-5">
       <Card className="w-1/2 shadow">
-        <form onSubmit={(e) => onSubmit(e)}>
+        <form onSubmit={onSubmit}>
           <CardHeader
             variant="gradient"
             color="red"
@@ -83,6 +115,46 @@ const AddUser = () => {
             </Typography>
           </CardHeader>
           <CardBody color="teal" className="flex flex-col gap-4">
+            {/* Student Photo Picker */}
+            <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-200 border-2 border-slate-300 flex items-center justify-center shrink-0">
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <CameraFill size={24} className="text-slate-400" />
+                )}
+              </div>
+              <div className="flex-1 text-xs">
+                <span className="font-bold text-slate-700 block mb-1">
+                  Student Profile Photo (Optional)
+                </span>
+                <div className="flex items-center gap-2">
+                  <label className="bg-slate-700 text-white px-3 py-1 rounded text-xs font-semibold cursor-pointer hover:bg-slate-800 transition">
+                    Browse Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onPhotoSelect}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  {photoPreview && (
+                    <button
+                      type="button"
+                      onClick={removeSelectedPhoto}
+                      className="text-red-600 hover:text-red-800 flex items-center gap-1 font-semibold border-0 bg-transparent cursor-pointer p-0"
+                    >
+                      <XCircleFill size={14} /> Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <Input
               color="teal"
               label="Name"
@@ -90,7 +162,7 @@ const AddUser = () => {
               value={name}
               name="name"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
@@ -100,7 +172,7 @@ const AddUser = () => {
               value={email}
               name="email"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <div style={{ display: "flex", alignItems: "center" }}>
               <Input
@@ -111,7 +183,7 @@ const AddUser = () => {
                 value={password}
                 name="password"
                 required
-                onChange={(e) => onInputChange(e)}
+                onChange={onInputChange}
                 style={{ flex: 1 }}
               />
               <div
@@ -132,7 +204,7 @@ const AddUser = () => {
               value={hairColor}
               name="hairColor"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
@@ -144,7 +216,7 @@ const AddUser = () => {
               value={height}
               name="height"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
@@ -156,7 +228,7 @@ const AddUser = () => {
               value={weight}
               name="weight"
               required
-              onChange={(e) => onInputChange(e)}
+              onChange={onInputChange}
             />
             <Input
               color="teal"
@@ -169,13 +241,13 @@ const AddUser = () => {
               value={gpa}
               name="gpa"
               required
-              onChange={(e) => onGpaChange(e)}
+              onChange={onGpaChange}
               error={gpaError}
             />
           </CardBody>
           <CardFooter className="pt-0">
             <Button variant="gradient" color="amber" type="submit" fullWidth>
-              Add
+              Add Student
             </Button>
             <Button
               variant="gradient"

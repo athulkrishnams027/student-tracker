@@ -10,7 +10,7 @@ import {
   Input,
   Button,
 } from "@material-tailwind/react";
-import { EyeFill, EyeSlashFill } from "react-bootstrap-icons";
+import { EyeFill, EyeSlashFill, CameraFill, PersonCircle } from "react-bootstrap-icons";
 import { getAuth, isStudent, getAuthHeaders } from "../../utils/auth";
 
 const API_BASE_URL =
@@ -21,6 +21,8 @@ const EditUser = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [gpaError, setGpaError] = useState("");
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [student, setStudent] = useState({
     name: "",
     email: "",
@@ -40,6 +42,9 @@ const EditUser = () => {
         getAuthHeaders()
       );
       setStudent(result.data);
+      if (result.data.profilePicture) {
+        setPhotoPreview(`${API_BASE_URL}/student/${id}/photo?t=${Date.now()}`);
+      }
     } catch (err) {
       alert(
         "Failed to load student: " +
@@ -83,6 +88,18 @@ const EditUser = () => {
     setStudent({ ...student, gpa: value });
   };
 
+  const onPhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
+        return;
+      }
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
 
@@ -93,6 +110,28 @@ const EditUser = () => {
           student,
           getAuthHeaders()
         );
+
+        if (photoFile) {
+          const formData = new FormData();
+          formData.append("photo", photoFile);
+          await axios.post(`${API_BASE_URL}/student/${id}/photo`, formData, {
+            headers: {
+              ...getAuthHeaders().headers,
+              "Content-Type": "multipart/form-data",
+            },
+          });
+        }
+
+        // Update local session if student edited their own record
+        const auth = getAuth();
+        if (auth && auth.role === "STUDENT") {
+          localStorage.setItem(
+            "authUser",
+            JSON.stringify({ ...auth, ...student })
+          );
+          window.dispatchEvent(new Event("authChange"));
+        }
+
         if (isStudent()) {
           navigate("/profile");
         } else {
@@ -129,6 +168,41 @@ const EditUser = () => {
             </Typography>
           </CardHeader>
           <CardBody color="teal" className="flex flex-col gap-4">
+            {/* Student Photo Section */}
+            <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div
+                className="w-16 h-16 rounded-full overflow-hidden bg-slate-200 border-2 flex items-center justify-center shrink-0"
+                style={{ borderColor: (hairColor || "gray").trim() }}
+              >
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <PersonCircle size={56} className="text-slate-400" />
+                )}
+              </div>
+              <div className="flex-1 text-xs">
+                <span className="font-bold text-slate-700 block mb-1">
+                  Profile Photo
+                </span>
+                <label className="bg-slate-700 text-white px-3 py-1 rounded text-xs font-semibold cursor-pointer hover:bg-slate-800 transition inline-flex items-center gap-1">
+                  <CameraFill size={12} /> Change Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onPhotoSelect}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
+            </div>
+
             <Input
               color="teal"
               label="Name"

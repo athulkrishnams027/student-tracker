@@ -46,3 +46,6 @@ yarn-error.log*
 
 # Maven Wrapper
 !.mvn/wrapper/maven-wrapper.jar
+
+# Uploaded files
+student-tracker-backend/uploads/

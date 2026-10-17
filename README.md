@@ -73,6 +73,16 @@ flowchart LR
 | `GET` | `/student/{id}` | Get student details by ID |
 | `PUT` | `/student/{id}` | Update existing student |
 | `DELETE` | `/student/{id}` | Delete a student by ID |
+| `POST` | `/student/{id}/photo` | Upload student profile photo (multipart/form-data) |
+| `GET` | `/student/{id}/photo` | Retrieve student profile photo image |
+| `DELETE` | `/student/{id}/photo` | Remove student profile photo |
+| `GET` | `/courses` | List all available academic courses |
+| `POST` | `/course` | Create a new course (Admin only) |
+| `DELETE` | `/course/{id}` | Delete a course (Admin only) |
+| `POST` | `/student/{id}/enroll/{courseId}` | Enroll student in an academic subject |
+| `DELETE` | `/student/{id}/enroll/{courseId}` | Drop an enrolled course |
+| `GET` | `/student/{id}/courses` | Get student's enrolled courses, grades & attendance |
+| `PUT` | `/enrollment/{id}/grade` | Assign grade & attendance, auto-recalculating student GPA (Admin only) |
 
 ---
 

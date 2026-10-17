@@ -1,5 +1,6 @@
 package com.studenttrackercurd.studenttrackerbackend.Model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,6 +26,9 @@ public class User {
     private String email;
     private String password;
     private LocalDateTime creationTimestamp;
+
+    @Column(name = "profile_picture", columnDefinition = "TEXT")
+    private String profilePicture;
 
     @PrePersist
     public void prePersist() {
@@ -86,5 +90,10 @@ public class User {
         this.creationTimestamp = creationTimestamp;
     }
 
-    
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
 }
