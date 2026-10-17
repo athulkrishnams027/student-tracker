@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ViewUser from "../components/users/ViewUser";
 import { Button, Typography } from "@material-tailwind/react";
 import { EyeFill, EyeSlashFill, ShieldLockFill } from "react-bootstrap-icons";
-import { getAuth, isAdmin, isStudent, getAuthHeaders } from "../utils/auth";
+import { getAuth, isAdmin, isStudent, isTeacher, getAuthHeaders } from "../utils/auth";
 
 const API_BASE_URL =
   process.env.REACT_APP_PRODUCTION_API || "http://localhost:8080";
@@ -49,6 +49,12 @@ const Home = () => {
           tab: "admin",
         },
       });
+      return;
+    }
+
+    if (isTeacher()) {
+      // Logged in as faculty -> redirect to faculty gradebook dashboard
+      navigate("/teacher/dashboard");
       return;
     }
 

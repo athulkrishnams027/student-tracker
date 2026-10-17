@@ -68,8 +68,17 @@ flowchart LR
 | :--- | :--- | :--- |
 | `POST` | `/student` | Create a new student |
 | `POST` | `/admin/login` | Admin login (username & password) |
+| `POST` | `/teacher/login` | Faculty / Teacher login with email & password |
 | `POST` | `/student/login` | Student login with email & password |
-| `GET` | `/students` | Get all students (sorted by creation timestamp) |
+| `GET` | `/teachers` | List all faculty members (Admin only) |
+| `POST` | `/teacher` | Register new faculty member (Admin only) |
+| `PUT` | `/teacher/{id}` | Update faculty details (Admin only) |
+| `DELETE` | `/teacher/{id}` | Remove faculty member (Admin only) |
+| `PUT` | `/course/{courseId}/assign-teacher/{teacherId}` | Assign faculty member to subject (Admin only) |
+| `GET` | `/teacher/{id}/courses` | Get subjects taught by faculty member (Self or Admin) |
+| `GET` | `/teacher/course/{courseId}/students` | Get enrolled students for assigned subject (Assigned Faculty or Admin) |
+| `PUT` | `/teacher/enrollment/{enrollmentId}/marks` | Enter internal marks, exam marks, grade, attendance (Assigned Faculty only) |
+| `GET` | `/students` | Get all students (Admin only) |
 | `GET` | `/student/{id}` | Get student details by ID |
 | `PUT` | `/student/{id}` | Update existing student |
 | `DELETE` | `/student/{id}` | Delete a student by ID |
@@ -81,8 +90,8 @@ flowchart LR
 | `DELETE` | `/course/{id}` | Delete a course (Admin only) |
 | `POST` | `/student/{id}/enroll/{courseId}` | Enroll student in an academic subject |
 | `DELETE` | `/student/{id}/enroll/{courseId}` | Drop an enrolled course |
-| `GET` | `/student/{id}/courses` | Get student's enrolled courses, grades & attendance |
-| `PUT` | `/enrollment/{id}/grade` | Assign grade & attendance, auto-recalculating student GPA (Admin only) |
+| `GET` | `/student/{id}/courses` | Get student's enrolled courses, marks, grades & attendance |
+| `PUT` | `/enrollment/{id}/grade` | Assign grade, marks & attendance, auto-recalculating student GPA (Admin only) |
 
 ---
 
@@ -135,6 +144,20 @@ flowchart LR
    npm start
    ```
    The frontend application starts at `http://localhost:3000`.
+
+---
+
+### Default User Roles & Credentials
+
+| Role | Username / Email | Password | Access Scope |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin` | `admin123` | Master control: manage students, add faculty, allocate subjects |
+| **Faculty (CS101)** | `knuth@university.edu` | `teacher123` | Subject-restricted: manage marks & grades for *CS101* |
+| **Faculty (CS201)** | `codd@university.edu` | `teacher123` | Subject-restricted: manage marks & grades for *CS201* |
+| **Faculty (MATH102)**| `strang@university.edu` | `teacher123` | Subject-restricted: manage marks & grades for *MATH102* |
+| **Faculty (PHY101)** | `feynman@university.edu` | `teacher123` | Subject-restricted: manage marks & grades for *PHY101* |
+| **Faculty (ENG205)** | `atwood@university.edu` | `teacher123` | Subject-restricted: manage marks & grades for *ENG205* |
+| **Student** | `athulkrishnams027@gmail.com` | `12345678` | Private profile: enroll in courses, view own marks & ID card |
 
 ---
 

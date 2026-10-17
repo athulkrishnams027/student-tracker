@@ -26,6 +26,8 @@ const ViewUser = ({ user, handleClose }) => {
   const [editingGradeEnId, setEditingGradeEnId] = useState(null);
   const [selectedGrade, setSelectedGrade] = useState("A");
   const [inputAttendance, setInputAttendance] = useState(100);
+  const [inputInternalMarks, setInputInternalMarks] = useState("");
+  const [inputExamMarks, setInputExamMarks] = useState("");
 
   const fetchStudentCourses = useCallback(async (userId) => {
     try {
@@ -70,6 +72,8 @@ const ViewUser = ({ user, handleClose }) => {
         {
           grade: selectedGrade,
           attendance: parseInt(inputAttendance, 10) || 100,
+          internalMarks: inputInternalMarks !== "" ? parseFloat(inputInternalMarks) : null,
+          examMarks: inputExamMarks !== "" ? parseFloat(inputExamMarks) : null,
         },
         getAuthHeaders()
       );
@@ -212,8 +216,11 @@ const ViewUser = ({ user, handleClose }) => {
                     <Table hover className="text-xs align-middle">
                       <thead className="table-light">
                         <tr>
-                          <th>Course</th>
+                          <th>Course & Faculty</th>
                           <th className="text-center">Credits</th>
+                          <th className="text-center">Internals (/50)</th>
+                          <th className="text-center">Exam (/50)</th>
+                          <th className="text-center">Total (/100)</th>
                           <th className="text-center">Attendance</th>
                           <th className="text-center">Grade</th>
                           <th className="text-center">Admin Action</th>
@@ -228,8 +235,11 @@ const ViewUser = ({ user, handleClose }) => {
                                 <strong className="font-mono text-amber-700 block">
                                   {en.course?.courseCode}
                                 </strong>
-                                <span className="font-semibold text-slate-800">
+                                <span className="font-semibold text-slate-800 block">
                                   {en.course?.title}
+                                </span>
+                                <span className="text-[10px] text-slate-500">
+                                  Faculty: {en.course?.teacher?.name || en.course?.instructor || "Unassigned"}
                                 </span>
                               </td>
                               <td className="text-center font-bold">
@@ -239,10 +249,51 @@ const ViewUser = ({ user, handleClose }) => {
                                 {isEditing ? (
                                   <input
                                     type="number"
+                                    step="0.5"
+                                    min="0"
+                                    max="50"
+                                    className="form-control form-control-sm text-center py-0"
+                                    style={{ width: "65px", margin: "0 auto" }}
+                                    value={inputInternalMarks}
+                                    onChange={(e) => setInputInternalMarks(e.target.value)}
+                                  />
+                                ) : (
+                                  <span className="font-semibold">
+                                    {en.internalMarks !== null && en.internalMarks !== undefined ? en.internalMarks : "--"}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    step="0.5"
+                                    min="0"
+                                    max="50"
+                                    className="form-control form-control-sm text-center py-0"
+                                    style={{ width: "65px", margin: "0 auto" }}
+                                    value={inputExamMarks}
+                                    onChange={(e) => setInputExamMarks(e.target.value)}
+                                  />
+                                ) : (
+                                  <span className="font-semibold">
+                                    {en.examMarks !== null && en.examMarks !== undefined ? en.examMarks : "--"}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                <span className="badge bg-slate-100 text-slate-900 border font-bold">
+                                  {en.totalMarks !== null && en.totalMarks !== undefined ? en.totalMarks : "--"}
+                                </span>
+                              </td>
+                              <td className="text-center">
+                                {isEditing ? (
+                                  <input
+                                    type="number"
                                     min="0"
                                     max="100"
                                     className="form-control form-control-sm text-center py-0"
-                                    style={{ width: "70px", margin: "0 auto" }}
+                                    style={{ width: "65px", margin: "0 auto" }}
                                     value={inputAttendance}
                                     onChange={(e) => setInputAttendance(e.target.value)}
                                   />
@@ -312,6 +363,8 @@ const ViewUser = ({ user, handleClose }) => {
                                       setEditingGradeEnId(en.id);
                                       setSelectedGrade(en.grade || "A");
                                       setInputAttendance(en.attendance || 100);
+                                      setInputInternalMarks(en.internalMarks !== null && en.internalMarks !== undefined ? en.internalMarks : "");
+                                      setInputExamMarks(en.examMarks !== null && en.examMarks !== undefined ? en.examMarks : "");
                                     }}
                                   >
                                     <PencilSquare size={12} /> Edit Grade

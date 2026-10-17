@@ -243,11 +243,13 @@ const StudentCourses = ({ studentId, onGpaUpdated }) => {
               <tr>
                 <th>Code</th>
                 <th>Course Title</th>
-                <th>Instructor & Dept</th>
+                <th>Faculty / Instructor</th>
                 <th className="text-center">Credits</th>
-                <th className="text-center">Semester</th>
-                <th className="text-center">Attendance</th>
+                <th className="text-center">Internals (/50)</th>
+                <th className="text-center">Exam (/50)</th>
+                <th className="text-center">Total (/100)</th>
                 <th className="text-center">Grade</th>
+                <th className="text-center">Attendance</th>
                 <th className="text-center">Action</th>
               </tr>
             </thead>
@@ -263,13 +265,15 @@ const StudentCourses = ({ studentId, onGpaUpdated }) => {
                     <strong className="text-slate-900 block">
                       {en.course?.title}
                     </strong>
-                    <span className="text-[10px] text-slate-500">
-                      {en.course?.description}
-                    </span>
+                    {en.remarks && (
+                      <span className="text-[10px] text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                        💬 <em>"{en.remarks}"</em>
+                      </span>
+                    )}
                   </td>
                   <td>
                     <span className="text-slate-700 block font-medium">
-                      {en.course?.instructor || "Department Faculty"}
+                      {en.course?.teacher?.name || en.course?.instructor || "Faculty"}
                     </span>
                     <span className="text-[10px] text-slate-400">
                       {en.course?.department}
@@ -278,10 +282,25 @@ const StudentCourses = ({ studentId, onGpaUpdated }) => {
                   <td className="text-center font-bold text-slate-800">
                     {en.course?.credits}
                   </td>
-                  <td className="text-center text-slate-600">
-                    {en.semester || "Fall 2026"}
+                  <td className="text-center font-semibold text-slate-700">
+                    {en.internalMarks !== null && en.internalMarks !== undefined
+                      ? `${en.internalMarks}`
+                      : <span className="text-slate-300">--</span>}
                   </td>
-                  <td className="text-center" style={{ minWidth: "110px" }}>
+                  <td className="text-center font-semibold text-slate-700">
+                    {en.examMarks !== null && en.examMarks !== undefined
+                      ? `${en.examMarks}`
+                      : <span className="text-slate-300">--</span>}
+                  </td>
+                  <td className="text-center font-bold text-teal-900">
+                    {en.totalMarks !== null && en.totalMarks !== undefined
+                      ? <span className="bg-teal-50 px-1.5 py-0.5 rounded">{en.totalMarks}</span>
+                      : <span className="text-slate-300">--</span>}
+                  </td>
+                  <td className="text-center">
+                    {getGradeBadge(en.grade, en.gradePoint)}
+                  </td>
+                  <td className="text-center" style={{ minWidth: "100px" }}>
                     <div className="flex items-center gap-1.5 justify-center">
                       <span className="font-bold text-slate-800">
                         {en.attendance || 100}%
@@ -293,9 +312,6 @@ const StudentCourses = ({ studentId, onGpaUpdated }) => {
                       style={{ height: "4px" }}
                       className="mt-1"
                     />
-                  </td>
-                  <td className="text-center">
-                    {getGradeBadge(en.grade, en.gradePoint)}
                   </td>
                   <td className="text-center">
                     <button
@@ -410,3 +426,4 @@ const StudentCourses = ({ studentId, onGpaUpdated }) => {
 };
 
 export default StudentCourses;
+

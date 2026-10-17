@@ -248,6 +248,29 @@ public class CourseController {
             }
         }
 
+        if (updateRequest.containsKey("internalMarks")) {
+            Object im = updateRequest.get("internalMarks");
+            if (im instanceof Number) enrollment.setInternalMarks(((Number) im).floatValue());
+        }
+
+        if (updateRequest.containsKey("examMarks")) {
+            Object em = updateRequest.get("examMarks");
+            if (em instanceof Number) enrollment.setExamMarks(((Number) em).floatValue());
+        }
+
+        if (updateRequest.containsKey("totalMarks")) {
+            Object tm = updateRequest.get("totalMarks");
+            if (tm instanceof Number) enrollment.setTotalMarks(((Number) tm).floatValue());
+        } else if (enrollment.getInternalMarks() != null || enrollment.getExamMarks() != null) {
+            float im = enrollment.getInternalMarks() != null ? enrollment.getInternalMarks() : 0f;
+            float em = enrollment.getExamMarks() != null ? enrollment.getExamMarks() : 0f;
+            enrollment.setTotalMarks(im + em);
+        }
+
+        if (updateRequest.containsKey("remarks")) {
+            enrollment.setRemarks((String) updateRequest.get("remarks"));
+        }
+
         if (updateRequest.containsKey("semester")) {
             enrollment.setSemester((String) updateRequest.get("semester"));
         }
@@ -264,3 +287,4 @@ public class CourseController {
         ));
     }
 }
+

@@ -32,6 +32,14 @@ public class Enrollment {
 
     private Float gradePoint; // e.g. 4.0, 3.7, 3.0, etc.
 
+    private Float internalMarks; // Continuous Internal Assessment (e.g., out of 50 or 40)
+
+    private Float examMarks; // End Semester Examination (e.g., out of 50 or 60)
+
+    private Float totalMarks; // Total score out of 100
+
+    private String remarks; // Faculty remarks
+
     private Integer attendance; // Percentage 0 - 100
 
     private LocalDateTime enrollmentDate;
@@ -123,4 +131,37 @@ public class Enrollment {
     public void setEnrollmentDate(LocalDateTime enrollmentDate) {
         this.enrollmentDate = enrollmentDate;
     }
+
+    public Float getInternalMarks() {
+        return internalMarks;
+    }
+
+    public void setInternalMarks(Float internalMarks) {
+        this.internalMarks = internalMarks;
+    }
+
+    public Float getExamMarks() {
+        return examMarks;
+    }
+
+    public void setExamMarks(Float examMarks) {
+        this.examMarks = examMarks;
+    }
+
+    public Float getTotalMarks() {
+        return totalMarks;
+    }
+
+    public void setTotalMarks(Float totalMarks) {
+        this.totalMarks = totalMarks;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 }
+

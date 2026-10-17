@@ -34,6 +34,11 @@ export const isStudent = () => {
   return auth && auth.role === "STUDENT";
 };
 
+export const isTeacher = () => {
+  const auth = getAuth();
+  return auth && auth.role === "TEACHER";
+};
+
 export const getAuthHeaders = () => {
   const auth = getAuth();
   if (!auth) return { headers: {} };

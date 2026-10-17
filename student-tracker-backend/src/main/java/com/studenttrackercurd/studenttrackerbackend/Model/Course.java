@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -26,6 +28,10 @@ public class Course {
     private String department;
 
     private String instructor;
+
+    @ManyToOne
+    @JoinColumn(name = "teacher_id")
+    private Teacher teacher;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -97,4 +103,16 @@ public class Course {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
+        if (teacher != null && (this.instructor == null || this.instructor.trim().isEmpty())) {
+            this.instructor = teacher.getName();
+        }
+    }
 }
+

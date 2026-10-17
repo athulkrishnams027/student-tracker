@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Typography, Navbar } from "@material-tailwind/react";
-import { ShieldLockFill, PersonFill } from "react-bootstrap-icons";
-import { getAuth, clearAuth, isAdmin, isStudent } from "../utils/auth";
+import { ShieldLockFill, PersonFill, MortarboardFill } from "react-bootstrap-icons";
+import { getAuth, clearAuth, isAdmin, isStudent, isTeacher } from "../utils/auth";
 
 const Navigationbar = () => {
   const navigate = useNavigate();
@@ -30,7 +30,9 @@ const Navigationbar = () => {
 
   const handleBrandClick = (e) => {
     e.preventDefault();
-    if (isStudent()) {
+    if (isTeacher()) {
+      navigate("/teacher/dashboard");
+    } else if (isStudent()) {
       navigate("/profile");
     } else if (isAdmin()) {
       navigate("/");
@@ -60,8 +62,13 @@ const Navigationbar = () => {
                 <ShieldLockFill size={12} /> Admin
               </span>
             )}
+            {isTeacher() && (
+              <span className="bg-teal-100 text-teal-800 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1">
+                <MortarboardFill size={12} /> Faculty
+              </span>
+            )}
             {isStudent() && (
-              <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1">
+              <span className="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1">
                 <PersonFill size={12} /> Student
               </span>
             )}
@@ -80,6 +87,14 @@ const Navigationbar = () => {
                   All Students
                 </Button>
                 <Button
+                  variant="outlined"
+                  size="sm"
+                  color="teal"
+                  onClick={() => navigate("/teachers")}
+                >
+                  Faculty & Subjects
+                </Button>
+                <Button
                   variant="filled"
                   size="sm"
                   color="red"
@@ -94,6 +109,28 @@ const Navigationbar = () => {
                   onClick={handleLogout}
                 >
                   Logout (Admin)
+                </Button>
+              </>
+            )}
+
+            {isTeacher() && (
+              <>
+                <Button
+                  variant="filled"
+                  size="sm"
+                  color="teal"
+                  onClick={() => navigate("/teacher/dashboard")}
+                  className="font-bold flex items-center gap-1 shadow"
+                >
+                  <MortarboardFill size={14} /> My Gradebook ({currentUser?.name ? currentUser.name.split(" ")[0] : "Faculty"})
+                </Button>
+                <Button
+                  variant="text"
+                  size="sm"
+                  color="red"
+                  onClick={handleLogout}
+                >
+                  Logout (Faculty)
                 </Button>
               </>
             )}
