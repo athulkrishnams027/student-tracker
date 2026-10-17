@@ -10,3 +10,4 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     boolean existsByEmailIgnoreCase(String email);
     List<Teacher> findByDepartmentIgnoreCase(String department);
 }
+
